@@ -13,7 +13,8 @@ input =
 const [mapText, commandText] = input.split('\n\n');
 const map = mapText.split('\n').map(row => row.split(''));
 const commands = commandText.split('');
-//get initial posituib
+
+//get initial position
 let position = [0, 0];
 outer: for (let r = 0; r < map.length; r++) {
   for (let c = 0; c < map[0].length; c++) {

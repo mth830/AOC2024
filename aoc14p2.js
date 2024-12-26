@@ -1,4 +1,60 @@
-let input = `p=62,65 v=-96,-93
+const input = givePuzzleData();
+//this one required actual puzzle data so the test case is pasted at the bottom
+// the time complexity isn't great so it may take about a minute to find the answer
+let robots = input.split('\n').map(row => {
+  let [point, vel] = row.split(' ');
+  point = point.slice(2).split(',').reverse().map(x => Number(x));
+  vel = vel.slice(2).split(',').reverse().map(x => Number(x));
+  return [point, vel];
+});
+
+const ARENA_WIDTH = 101;
+const ARENA_HEIGHT = 103;
+let arena = [];
+let locations = {};
+let quadrants = [[0, 0,], [0, 0]];
+
+let mod = (a, b) => a - (Math.floor(a / b) * b);
+
+const calcPositions = (steps) => {
+  arena = new Array(ARENA_HEIGHT)
+    .fill()
+    .map(row => new Array(ARENA_WIDTH).fill('.'));
+
+  locations = {};
+  quadrants = [[0, 0,], [0, 0]];
+
+
+  for (const robot of robots) {
+    let [[row, col], [rowVelocity, columnVelocity]] = robot;
+    let latestRow = mod((row + rowVelocity * steps), ARENA_HEIGHT);
+    let latestCol = mod((col + columnVelocity * steps), ARENA_WIDTH);
+    locations[[latestRow, latestCol]] = true;
+  };
+}
+const printArena = () => {
+  for (let r = 0; r < ARENA_HEIGHT; r++) {
+    for (let c = 0; c < ARENA_WIDTH; c++) {
+      if ([r, c] in locations) arena[r][c] = 'X';
+    }
+  }
+  return arena.map(x => x.join('')).join('\n');
+};
+for (let i = 0; i < 10000; i++) {
+  calcPositions(i);
+  for (let r = 0; r < ARENA_HEIGHT; r++) {
+    for (let c = 0; c < ARENA_WIDTH; c++) {
+      if ([r, c] in locations) arena[r][c] = 'X';
+    }
+  }
+  if (arena.find(row => row.find((x, i, a) => ("" + a[i] + a[i - 1] + a[i - 2] + a[i - 3] + a[i - 4] + a[i - 5] + a[i - 6]) === 'XXXXXXX'))) {
+    console.log([i])
+    console.log(printArena())
+  }
+}
+
+function givePuzzleData() {
+  return `p=62,65 v=-96,-93
 p=50,44 v=72,74
 p=33,42 v=-6,-83
 p=68,100 v=36,21
@@ -497,73 +553,5 @@ p=25,35 v=-38,30
 p=9,9 v=64,87
 p=54,27 v=-69,63
 p=53,21 v=-14,-36
-p=42,31 v=2,30`
-// input =
-//   `p=0,4 v=3,-3
-// p=6,3 v=-1,-3
-// p=10,3 v=-1,2
-// p=2,0 v=2,-1
-// p=0,0 v=1,3
-// p=3,0 v=-2,-2
-// p=7,6 v=-1,-3
-// p=3,0 v=-1,-2
-// p=9,3 v=2,3
-// p=7,3 v=-1,2
-// p=2,4 v=2,-3
-// p=9,5 v=-3,-3`
-//input = `p=2,4 v=2,-3`
-let robots = input.split('\n').map(row => {
-  let [point, vel] = row.split(' ');
-  point = point.slice(2).split(',').reverse().map(x => Number(x));
-  vel = vel.slice(2).split(',').reverse().map(x => Number(x))
-  return [point, vel]
-});
-
-const ARENA_WIDTH = 101;
-const ARENA_HEIGHT = 103;
-let arena = [];
-let locations = {};
-let quadrants = [[0, 0,], [0, 0]]
-
-let mod = (a, b) => a - (Math.floor(a / b) * b);
-
-const calcPositions = (steps) => {
-  arena = new Array(ARENA_HEIGHT).fill().map(row => new Array(ARENA_WIDTH).fill('.'));
-
-  locations = {};
-  quadrants = [[0, 0,], [0, 0]]
-
-
-  for (const robot of robots) {
-    let [[r, c], [rv, cv]] = robot;
-    let latestRow = mod((r + rv * steps), ARENA_HEIGHT);
-    let latestCol = mod((c + cv * steps), ARENA_WIDTH);
-    locations[[latestRow, latestCol]] = true;
-    if (latestRow !== Math.floor(ARENA_HEIGHT / 2) && latestCol !== Math.floor(ARENA_WIDTH / 2)) {
-      let rowQuadrant = Math.floor(latestRow / (ARENA_HEIGHT / 2));
-      let colQuadrant = Math.floor(latestCol / (ARENA_WIDTH / 2))
-      quadrants[rowQuadrant][colQuadrant]++;
-    }
-  };
+p=42,31 v=2,30`;
 }
-const printArena = () => {
-  for (let r = 0; r < ARENA_HEIGHT; r++) {
-    for (let c = 0; c < ARENA_WIDTH; c++) {
-      if ([r, c] in locations) arena[r][c] = 'X';
-    }
-  }
-  return arena.map(x => x.join('')).join('\n');
-};
-for (let i = 0; i < 10000; i++) {
-  calcPositions(i);
-  for (let r = 0; r < ARENA_HEIGHT; r++) {
-    for (let c = 0; c < ARENA_WIDTH; c++) {
-      if ([r, c] in locations) arena[r][c] = 'X';
-    }
-  }
-  if (arena.find(row => row.find((x, i, a) => ("" + a[i] + a[i - 1] + a[i - 2] + a[i - 3] + a[i - 4] + a[i - 5] + a[i - 6]) === 'XXXXXXX'))) {
-    console.log([i])
-    console.log(printArena())
-  }
-}
-

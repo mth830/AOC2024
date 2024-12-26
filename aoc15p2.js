@@ -44,40 +44,16 @@ outer: for (let r = 0; r < map.length; r++) {
 
 const getGPSCoordinate = (i, j) => i * 100 + j;
 
-
 const shift = (startRow, startCol, cmd) => {
   if (cmd === '>') {
-    let ending = -1;
-    for (let c = startCol; c < map[0].length; c++) {
-      if (map[startRow][c] === '.') {
-        ending = c - 1;
-        break;
-      } else if (map[startRow][c] === '#') {
-        break;
-      }
-    }
+    let ending = findNextDot(startRow, startCol, [0, 1]);
     if (ending >= 0) {
-
-      for (let c = ending; c >= startCol; c--) {
-        [map[startRow][c], map[startRow][c + 1]] = [map[startRow][c + 1], map[startRow][c]]
-      }
-      position[1]++;
+      shiftAll(startRow, startCol, startRow, ending, [0, -1]);
     }
   } else if (cmd === '<') {
-    let ending = -1;
-    for (let c = startCol; c >= 0; c--) {
-      if (map[startRow][c] === '.') {
-        ending = c;
-        break;
-      } else if (map[startRow][c] === '#') {
-        break;
-      }
-    }
+    let ending = findNextDot(startRow, startCol, [0, -1]);
     if (ending >= 0) {
-      for (let c = ending + 1; c <= startCol; c++) {
-        [map[startRow][c], map[startRow][c - 1]] = [map[startRow][c - 1], map[startRow][c]]
-      }
-      position[1]--;
+      shiftAll(startRow, startCol, startRow, ending, [0, 1]);
     }
   } else if (cmd === '^') {
     if (canShift(position[0], position[1], 1)) {
@@ -91,22 +67,72 @@ const shift = (startRow, startCol, cmd) => {
     }
   }
 }
+
+const findNextDot = (startRow, startCol, [yDiff, xDiff]) => {
+  if (xDiff === 0) {
+    for (let r = startRow; r >= 0 && r < map.length; r += yDiff) {
+      if (map[r][startCol] === '#') return -1;
+      else if (map[r][startCol] === '.') return r;
+    }
+  } else if (yDiff === 0) {
+    for (let c = startCol; c >= 0 && c < map[0].length; c += xDiff) {
+      if (map[startRow][c] === '#') return -1;
+      else if (map[startRow][c] === '.') return c;
+    }
+  } else {
+    throw new Error('Shift Error xDiff/yDiff not defined');
+  }
+  return -1;
+
+}
+
+//yDiff and xDiff controls direction of looping -1 for shifting down 1 for shifting up
+const shiftAll = (startRow, startCol, endRow, endCol, [yDiff, xDiff]) => {
+  if (xDiff === 0) {
+    for (let r = endRow; r != startRow; r += yDiff) {
+      [map[r][startCol], map[r + yDiff][startCol]] =
+        [map[r + yDiff][startCol], map[r][startCol]];
+    }
+    position[0] -= yDiff;
+  }
+  else if (yDiff === 0) {
+    for (let c = endCol; c != startCol; c += xDiff) {
+      [map[startRow][c], map[startRow][c + xDiff]] =
+        [map[startRow][c + xDiff], map[startRow][c]];
+    }
+    position[1] -= xDiff;
+  } else {
+    throw new Error('Shift Error xDiff/yDiff not defined');
+  }
+}
+
 //determine if it's safe to move in vertically
 // dir is +1 for up -1 for down
 const canShift = (i, j, dir = 1, visited = {}) => {
-  if (i < 0 || i >= map.length || j < 0 || j >= map[0].length) throw new Error("out of bounds");
+  if (i < 0 || i >= map.length || j < 0 || j >= map[0].length) {
+    throw new Error("out of bounds");
+  }
   visited[[i, j]] = true;
-  if (map[i][j] === '.') return true;
-  else if (map[i][j] === '#') return false;
+  if (map[i][j] === '.') { return true; }
+  else if (map[i][j] === '#') { return false; }
   else if ("[]@".includes(map[i][j])) {
-    if (map[i - dir][j] === '[') return canShift(i - dir, j, dir, visited) && canShift(i - dir, j + 1, dir, visited)
-    else if (map[i - dir][j] === ']') return canShift(i - dir, j, dir, visited) && canShift(i - dir, j - 1, dir, visited)
-    else return canShift(i - dir, j, dir, visited)
+    if (map[i - dir][j] === '[') {
+      return canShift(i - dir, j, dir, visited)
+        && canShift(i - dir, j + 1, dir, visited);
+    } else if (map[i - dir][j] === ']') {
+      return canShift(i - dir, j, dir, visited)
+        && canShift(i - dir, j - 1, dir, visited);
+    } else {
+      return canShift(i - dir, j, dir, visited);
+    }
   }
   return false;
 }
+//recursively shift boxes above or below starting location
 const shiftVertically = (i, j, dir, visited = {}) => {
-  if (i < 0 || i >= map.length || j < 0 || j >= map[0].length) throw new Error("out of bounds");
+  if (i < 0 || i >= map.length || j < 0 || j >= map[0].length) {
+    throw new Error("out of bounds");
+  }
   if ([i, j] in visited) return;
   visited[[i, j]] = true;
   if (map[i][j] === '.') return;
@@ -124,9 +150,7 @@ const shiftVertically = (i, j, dir, visited = {}) => {
   }
 
 }
-commands.forEach(cmd => {
-  shift(position[0], position[1], cmd);
-});
-//console.log(map.map(row=>row.join('')).join('\n'))
+commands.forEach(cmd =>   shift(position[0], position[1], cmd));
+
 let result = map.reduce((rowSum, row, r) => rowSum + row.reduce((sum, x, c) => x === '[' ? sum + getGPSCoordinate(r, c) : sum, 0), 0);
 console.log(result);
