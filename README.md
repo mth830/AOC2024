@@ -1,1 +1,3 @@
-Some solutions for Advent of code 2024 the input data is stored that the top of the file so it might be necessary to drop to the bottom.
+#Advent of code 2024
+Here are some solutions for advent of code filenames are named aoc[day]p(art)[1/2] the input data was pasted in at the top
+so that anyone can paste in their puzzle to test.
